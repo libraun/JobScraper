@@ -33,7 +33,7 @@ if __name__ == "__main__":
                                       start = 1):
         response = requests.get(href)
         # Begin if 
-        if (requests.get(href).status_code == 200):
+        if (response.status_code == 200):
             
             # Load progress indicator
             stdout_then_flush("{} / {}".format(idx, len(links)))
