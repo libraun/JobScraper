@@ -36,17 +36,17 @@ if __name__ == "__main__":
         if (response.status_code == 200):
             
             # Load progress indicator
-            stdout_then_flush("{} / {}".format(idx, len(links)))
-
-            driver.get(href) # Navigate to the link
-            time.sleep(0.5)
+            sys.stdout.write('{}\r'.format("{} / {}".format(idx, len(links))))
+            sys.stdout.flush()
+            driver.get(href); time.sleep(0.5) # Navigate to the link
             get_scroll_height(driver) # To load all elements
         
             descriptor_map = {"Job Title" : title} # Initialize data with job title
 
             # Try to save the employer name as a value of company.
             try:
-                company_name_elem = driver.find_element(By.XPATH, "/html/body/main/section[1]/div/section[2]/div/div[1]/div/h4/div[1]/span[1]/a")
+                company_name_elem = driver.find_element(By.XPATH, \
+                    "/html/body/main/section[1]/div/section[2]/div/div[1]/div/h4/div[1]/span[1]/a")
                 descriptor_map["Company"] = company_name_elem.text
             except:
                 descriptor_map["Company"] = "Not applicable"
@@ -78,12 +78,16 @@ if __name__ == "__main__":
         # code neatly, and then sleep for 15 seconds.
         else:
             bad_requests_counter += 1
-            stdout_then_flush("Status {code}! x{n}"\
+            sys.stdout.write("Status {code}! x{n}\r"\
                              .format(code = response.status_code,
                                      n = bad_requests_counter))
+            sys.stdout.flush()
             # A prettier/more verbose sleep alert
             for i in range(10,0):
-                stdout_then_flush("\nSleeping for {} seconds...\n".format(i))
+                sys.stdout.write("Sleeping for {} seconds...\r"\
+                             .format(code = response.status_code,
+                                     n = bad_requests_counter))
+                sys.stdout.flush()
                 time.sleep(1)
             pass
             # End inner else 1
@@ -94,7 +98,7 @@ if __name__ == "__main__":
     
     with open('out.csv', 'a+') as outfile:
         # Write the header before anything
-        outfile.write("{}\n".format(str(keys[0])  ) )
+        outfile.write("{}\n".format( str(keys[0]) ) )
 
         # Enumerate through the job_listings, writing
         # each one as a comma-separated line.
@@ -102,10 +106,7 @@ if __name__ == "__main__":
 
             outfile.write( str(idx) )
             for key, val in desc.items():
-                # Debugging
-                stdout_then_flush("{key},{val}"\
-                                 .format(key=key,val=val))
-                
+
                 outfile.write(",{}".format(val))
             outfile.write('\n')
         # End for loop

@@ -5,7 +5,10 @@
 from selenium import webdriver
 
 import time
-import sys
+
+def close_driver(_driver: webdriver):
+    _driver.close()
+    _driver._ensure_close()
 
 def clean_search_token(token: str):
     return token.lower().replace(" ","-").replace(',',';')
@@ -46,7 +49,3 @@ def read_input_file(_filename: str):
                 data[elements[0]] = elements[1]
         infile.close()
     return data
-
-def stdout_then_flush(message: str):
-    sys.stdout.writelines('{}\r'.format(message))
-    sys.stdout.flush()

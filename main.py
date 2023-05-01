@@ -1,7 +1,7 @@
 # @ Author "Jet Braun"
 #
 # @ Institution "University of Minnesota-Duluth"
-# @ File "include.py"
+# @ File "main.py"
 
 import subprocess
 import sys, re
@@ -31,8 +31,10 @@ if __name__ == "__main__":
     
     if (operation_mode == 0):
         run_scrape_list()
+
     elif (operation_mode == 1):
         run_scrape_links("o_links.txt")
+        
     elif (operation_mode == 2):
         run_scrape_list()
         run_scrape_links("o_links.txt")

@@ -13,22 +13,29 @@ from include import *
 
 if __name__ == "__main__":
     output_filename = sys.argv[1]
-    search_token = clean_search_token(sys.argv[2])
-    search_location = clean_search_token(sys.argv[3])
+    query_filter_job = sys.argv[2]
+    query_filter_location = sys.argv[3]
 
-    url = "http://www.linkedin.com/jobs/{voc}-jobs-{loc}"\
-            .format(voc=search_token, loc=search_location)
+    query_job_token = clean_search_token(query_filter_job)
+    query_location_token = clean_search_token(query_filter_location)
+
+    url = "http://www.linkedin.com/jobs/{job}-jobs-{location}"\
+            .format(job = query_filter_job, 
+                    location = query_filter_location)
 
     service = Service("/Documents/chromedriver.exe")
-    driver = uc.Chrome(service=service,headless=True)
+    driver = uc.Chrome(service = service,\
+                       headless=True)
     
     driver.implicitly_wait(3)
     driver.get(url=url)
 
     height = get_scroll_height(driver)
 
-    search_result_list = driver.find_element(By.XPATH, '/html/body/div[1]/div/main/section[2]/ul')
-    results = search_result_list.find_elements(By.TAG_NAME, 'a')
+    search_result_list = driver.\
+        find_element(By.XPATH, '/html/body/div[1]/div/main/section[2]/ul')
+    results = search_result_list.\
+        find_elements(By.TAG_NAME, 'a')
 
     output = {}
     result_len = len(results)
@@ -36,7 +43,6 @@ if __name__ == "__main__":
     # Begin while
     while len(results) > 0:
         idx += 1
-        stdout_then_flush("{} / {}".format(idx, result_len))
 
         result = results.pop()
         try:
@@ -46,9 +52,10 @@ if __name__ == "__main__":
             output[span] = link
         except:
             continue
-        output[span] = link
+        idx += 1
+        sys.stdout.write("{} / {}\r".format(idx, result_len))
+        sys.stdout.flush()
     # End while
-    driver.close()
-    driver._ensure_close()
+    close_driver(driver)
 
     write_dict_to_file(output_filename,output,mode='a+')
