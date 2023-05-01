@@ -14,15 +14,17 @@ import sys
 from include import *
 
 if __name__ == "__main__":
+    # An input file is used to query a list of locations here.
     input_filename = sys.argv[1]
-    output_filename = sys.argv[2]
+    # And the resulting job listings are saved at output_filename/
+    output_filename = sys.argv[2] 
 
     links = read_input_file(input_filename)
 
     service = Service("Documents/chromedriver.exe")
     driver = uc.Chrome(service=service, \
-                       headless=True)
-    driver.implicitly_wait(3)
+                       headless=True) # Headless as a preventative
+    driver.implicitly_wait(3) # Set the time to wait between calls
 
     job_listings = []
     bad_requests_counter = 0
@@ -30,7 +32,7 @@ if __name__ == "__main__":
     for idx,(title,href) in enumerate(links.items(),
                                       start = 1):
         response = requests.get(href)
-        # Begin if 1
+        # Begin if 
         if (requests.get(href).status_code == 200):
             
             # Load progress indicator
