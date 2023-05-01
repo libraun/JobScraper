@@ -1,7 +1,7 @@
 # @ Author "Jet Braun"
 #
 # @ Institution "University of Minnesota-Duluth"
-# @ File "include.py"
+# @ File "scrape_links.py"
 
 import undetected_chromedriver as uc 
 from selenium.webdriver.common.by import By
@@ -80,7 +80,8 @@ if __name__ == "__main__":
     driver._ensure_close()
     
     keys = job_listings[0].keys()
-    with open('out.csv', 'a') as outfile:
+    
+    with open('out.csv', 'a+') as outfile:
         outfile.write("{}\n".format(str(keys[0])))
         for idx, desc in enumerate(job_listings):
             outfile.write(str(idx))

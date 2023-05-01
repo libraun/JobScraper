@@ -1,7 +1,7 @@
 # @ Author "Jet Braun"
 #
 # @ Institution "University of Minnesota-Duluth"
-# @ File "include.py"
+# @ File "scrape.py"
 
 import undetected_chromedriver as uc 
 from selenium.webdriver.common.by import By
@@ -51,4 +51,4 @@ if __name__ == "__main__":
     driver.close()
     driver._ensure_close()
 
-    write_dict_to_file(output_filename,output,mode='a')
+    write_dict_to_file(output_filename,output,mode='a+')

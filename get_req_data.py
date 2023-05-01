@@ -1,7 +1,7 @@
 # @ Author "Jet Braun"
 #
 # @ Institution "University of Minnesota-Duluth"
-# @ File "include.py"
+# @ File "get_req_data.py"
 import csv
 
 if __name__ == "__main__":
