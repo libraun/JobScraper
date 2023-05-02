@@ -32,20 +32,21 @@ def write_dict_to_file(filename: str, data: dict,mode='a+'):
                                   val=value)) 
         outfile.close()
     
-def get_scroll_height(_driver: uc.Chrome):
+def scroll_to_end(_driver: uc.Chrome, sleep_duration: int):
     last_height = _driver.execute_script(
         "return document.body.scrollHeight")
     while(True):
         _driver.execute_script(
             "window.scrollTo(0, document.body.scrollHeight);")
         # Wait to load page
-        time.sleep(2)
+        time.sleep(sleep_duration)
         # Calculate new scroll height and compare with last scroll height
         new_height = _driver.execute_script(
             "return document.body.scrollHeight")
         if new_height == last_height:
             break
         last_height = new_height
+    return last_height
 
 def read_input_file(_filename: str):
     data = {}
