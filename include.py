@@ -2,42 +2,50 @@
 #
 # @ Institution "University of Minnesota-Duluth"
 # @ File "include.py"
-from selenium import webdriver
+import undetected_chromedriver as uc
 
 import time
 
-def close_driver(_driver: webdriver):
+def is_not_empty_string(text: str):
+    if ((text != None) and (text != '')):
+        return True
+    return False
+
+def close_driver(_driver: uc.Chrome):
     _driver.close()
     _driver._ensure_close()
 
 def clean_search_token(token: str):
     return token.lower().replace(" ","-").replace(',',';')
 
-def write_list_to_file(filename: str, data: list,mode='a'):
+def write_list_to_file(filename: str, data: list,mode='a+'):
     with open(filename, mode) as outfile:
         for value in data:
             outfile.write('{}\n'.format(value))
         outfile.close()
         
-def write_dict_to_file(filename: str, data: dict,mode='a'):
+def write_dict_to_file(filename: str, data: dict,mode='a+'):
     with open(filename, mode) as outfile:
         for key, value in data.items():
             outfile.write('{key}\t{val}\n'\
-                          .format(key=key, val=value)) 
+                          .format(key=key, 
+                                  val=value)) 
         outfile.close()
     
-def get_scroll_height(_driver: webdriver):
-    last_height = _driver.execute_script("return document.body.scrollHeight")
+def get_scroll_height(_driver: uc.Chrome):
+    last_height = _driver.execute_script(
+        "return document.body.scrollHeight")
     while(True):
-        _driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        _driver.execute_script(
+            "window.scrollTo(0, document.body.scrollHeight);")
         # Wait to load page
         time.sleep(2)
         # Calculate new scroll height and compare with last scroll height
-        new_height = _driver.execute_script("return document.body.scrollHeight")
+        new_height = _driver.execute_script(
+            "return document.body.scrollHeight")
         if new_height == last_height:
             break
         last_height = new_height
-    return last_height
 
 def read_input_file(_filename: str):
     data = {}
