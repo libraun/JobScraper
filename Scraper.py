@@ -62,6 +62,7 @@ class Scraper:
                                                   output_path=output_path)
                 except:
                     continue
+        response.close()
 
     # Given a filename, scrapes each URL in the file for 
     # LinkedIn 
@@ -101,30 +102,12 @@ class Scraper:
             # Finally close the response
             response.close()
 
-    def __scroll_to_end__(self,
-                          sleep_time):
-        time.sleep(1)
-        last_height = self.driver.execute_script(
-            "return document.body.scrollHeight")
-        while(True):
-            self.driver.execute_script(
-                "window.scrollTo(0, document.body.scrollHeight);")
-            # Wait to load page
-            time.sleep(sleep_time)
-            # Calculate new scroll height and compare with last scroll height
-            new_height = self.driver.execute_script(
-                "return document.body.scrollHeight")
-            if new_height == last_height:
-                break
-            last_height = new_height
-        return last_height
-
     # Scrapes a given URL, and returns result job field 
     # descriptors as a dict 
     def scrape_url(self, 
                    url: str):
         self.driver.get(url=url)
-        self.__scroll_to_end__(1.5) # To load all elements
+        self.__scroll_to_end__(1.25) # To load all elements
         result_map = {}
         # Try to save the employer name as a value of company.
         # There are probably better ways to do this...
@@ -160,15 +143,15 @@ class Scraper:
         with open(output_path, self.mode) as outfile:
             # Write headers if headers == True
             if headers: 
-                outfile.write(','.join([key for key in result.keys()]))
+                outfile.write(self.__list_to_row__(result.keys()))
             # Write a new line
             outfile.write('\n')
             # Write the column values
-            outfile.write(','.join([value for value in result.values()]))
+            outfile.write(self.__list_to_row__(result.values()))
 
-    def __concat_list_to_row__(self,
-                               str_list: dict):
-        return ','.join([key for key in str_list.keys()])
+    def __list_to_row__(self,
+                               str_list: list):
+        return ','.join([key for key in str_list])
     
     def __log_bad_request__(self,
                             code: int):
@@ -183,16 +166,31 @@ class Scraper:
         sys.stdout.write("\r\n{}\r\n".format(text))
         sys.stdout.flush()
 
+
     # Protected method to retrieve one line from 
     # a given file
     def __get_line__(self,
                      filename: str):
         with open(filename, 'r') as infile:
             lines = infile.read().split('\n')
-        for line in lines:
-            fields = line.split('\t')
-            assert len(fields) == 3, exit("Bad fields!")
-            
-            m = re.search("https://linkedin.com/", fields[1])
-            if m:
-                yield fields
+            for line in lines:
+                yield line.split('\t')
+
+    def __scroll_to_end__(self,
+                          sleep_time):
+                          
+        time.sleep(1)
+        last_height = self.driver.execute_script(
+            "return document.body.scrollHeight")
+        while(True):
+            self.driver.execute_script(
+                "window.scrollTo(0, document.body.scrollHeight);")
+            # Wait to load page
+            time.sleep(sleep_time)
+            # Calculate new scroll height and compare with last scroll height
+            new_height = self.driver.execute_script(
+                "return document.body.scrollHeight")
+            if new_height == last_height:
+                break
+            last_height = new_height
+        return last_height
