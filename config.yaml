@@ -1,0 +1,7 @@
+main:
+    job-title: "Software Engineer"
+    job-location: "United States"
+    driver-path: "./"
+
+    input-filepath: "./input.csv"
+    output-filepath: "./output.csv"

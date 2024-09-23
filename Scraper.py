@@ -3,7 +3,9 @@ from selenium.webdriver.common.by import By
 
 import logging
 
-import requests
+import csv
+
+import re
 import time
 
 from typing import Iterable
@@ -22,7 +24,7 @@ def _scroll_to_end(driver: uc.Chrome, sleep_duration: float):
         "return document.body.scrollHeight")
     
     new_height = None
-    while(new_height != last_height):
+    while new_height != last_height:
 
         driver.execute_script(
             "window.scrollTo(0, document.body.scrollHeight);")
@@ -47,102 +49,70 @@ _STATUS_ERR_MSG = "Status {code}! x{count}"
 _MAIN_URL = "http://www.linkedin.com/jobs/{job}-jobs-{location}"
 
 class Scraper:
-     
-    def __init__(self, chrome_driver: uc.Chrome, mode: str='a+',):
+
+    timeout_codes = (403, 429)
+    bad_request_count = 0
+
+    def __init__(self, chrome_driver: uc.Chrome, mode: str='a+'):
 
         self.driver = chrome_driver
         
         self.timeout_codes = (403, 429)
-        self.bad_request_count = 0
 
         self.mode = mode
 
-    def close_driver(self):
-        self.driver.close()
+    def scrape(self, output_path: str,
+               job_filter: str, 
+               location_filter: str):
 
-    def scrape_navigation_page(self, output_path: str,
-                               query_filter_job: str,
-                               query_filter_location: str,
-                               sleep_time = 0.5) -> bool:
-        # Format target_url to include job & location 
-        target_nav_url = _MAIN_URL.format(job=query_filter_job, 
-                                             location=query_filter_location)
-        # Load the URL
-        response = requests.get(target_nav_url)
+        target_nav_url = _MAIN_URL.format(
+            job=job_filter, location=location_filter)
 
-        # Close the response and return False (failure)
-        if response.status_code != 200:
 
-            response.close()
-            return False
-
-        # Get url and call _scroll_to_end to ensure content is loaded
+        
         self.driver.get(target_nav_url)
-        _scroll_to_end(self.driver, sleep_time=sleep_time)
+        _scroll_to_end(self.driver, sleep_duration=1)
+        time.sleep(1.5)
+        while self.driver.current_url == "https://www.linkedin.com":
+            self.driver.get(target_nav_url)
+            time.sleep(1)
 
+        self.driver.find_element(By.XPATH, "/html/body").click()
+        
+
+        _scroll_to_end(self.driver, sleep_duration=1)
         try:
             search_results = self.driver.find_element(
                 By.XPATH, '/html/body/div[1]/div/main/section[2]/ul')
-            url_elems = search_results.find_elements(
-                By.TAG_NAME, 'a')
+            
+            url_elems = [elem for elem in 
+                         search_results.find_elements(By.TAG_NAME, 'a')]
         except: 
             return False
         
-        output = dict()
-        for url_elem in url_elems:
-            try:
-                span = url_elem.find_element(By.CLASS_NAME, "sr-only").text
-                link = url_elem.get_property('href')
+        with open(output_path, "w+", newline="") as fp:
+            writer = csv.writer(fp, delimiter=",")
+            for url in url_elems:
+                url.click()
 
-                output[span] = link
-
-                _write_result_to_file(span,output_path=output_path)
-            except:
-                continue    
-        # Close response and return True (success)
-        response.close()
-        return True
-
-    # Given a filename, scrapes each URL in the file for 
-    # LinkedIn 
-    def scrape_links_from_file(self,
-                               input_path: str,
-                               output_path: str):
-        # Set to true initially to write headers once.
-        write_headers = True
-        for title, url, location in _get_line(input_path):
-
-            response = requests.get(url)
-
-            # Bad status code received, log warning to console and sleep
-            if response.status_code != 200:   
-                self.__log_bad_request__(response.status_code)
-                time.sleep(15)
-                
-            self.driver.get(url=url)
-            result = self.scrape_url(url)
+                result = self.scrape_url(url)
             
-            if result is None:
-                continue
-            
-            # If the headers haven't been written yet, write them and disable write_headers.
-            if write_headers:
-                _write_result_to_file(("title", "location", "href"), output_path)
-                write_headers = False
-
-            # Write job information regardless of whether headers have been written
-            _write_result_to_file((title, url, location), output_path)
-            # Finally close the response
-            response.close()
+                if result is not None:
+                    print(result.values())
+                    print(writer.writerow(result.values()))
 
     # Scrapes a given URL, and returns result job field 
     # descriptors as a dict 
-    def scrape_url(self, url: str):
+    def scrape_url(self, url: str) -> dict:
 
-        self.driver.get(url=url)
-        
-        # Ensure all elements are loaded
-        _scroll_to_end(self.driver, 1.25) 
+        # Get URL, scroll to end to grab all information
+    #    self.driver.get(url=url)
+        _scroll_to_end(self.driver, 1)
+
+        if re.search("authwall", self.driver.current_url):
+            return None
+
+        self.driver.find_element(By.XPATH, "/html/body").click()
 
         result_map = dict()
         # Try to save the employer name as a value of company.
@@ -171,10 +141,10 @@ class Scraper:
         return result_map
 
     
-    def __log_bad_request__(self,
-                            code: int):
+    def _log_bad_request(self, code: int):
+
         self.bad_request_count += 1
         msg = _STATUS_ERR_MSG.format(code = code, count = self.bad_request_count)
 
-        logging.warn(msg)
+        logging.warning(msg)
 
